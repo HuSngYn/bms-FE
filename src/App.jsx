@@ -7,6 +7,7 @@ import BookCreatePage from "./pages/BookCreatePage.jsx";
 import LogInPage from "./pages/LogInPage.jsx";
 import SignUpPage from "./pages/SignUpPage.jsx";
 import BookDetailPage from "./pages/BookDetailPage.jsx";
+import BookEditPage from "./pages/BookEditPage.jsx";
 import ApiTestPage from "./pages/ApiTestPage.jsx";
 import MyBookListPage from "./pages/MyBookListPage.jsx";
 
@@ -22,6 +23,7 @@ function App() {
         <Route path="login" element={<LogInPage />} />
         <Route path="signup" element={<SignUpPage />} />
         <Route path="books/:id" element={<BookDetailPage />} />
+        <Route path="books/:id/edit" element={<BookEditPage />} />
         <Route path="api_test" element={<ApiTestPage />} />
         <Route path="my/books" element={<MyBookListPage />} />
 

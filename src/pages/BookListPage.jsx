@@ -4,25 +4,48 @@ import BookList from "../components/books/BookList";
 import { Box, Pagination, Typography, Stack } from "@mui/material";
 
 export default function BookListPage() {
-  // TODO: 나중에는 여기 데이터를 서버에서 받아오면 됨
+  // 더 자세한 테스트를 위한 더미 데이터 (이미지의 스키마 기반)
   const books = [
     {
       id: 1,
       title: "클린 코드",
       author: "로버트 C. 마틴",
       description: "가독성과 유지보수성을 높이는 코드 작성 원칙을 다루는 책입니다.",
-      thumbnail: "https://placehold.co/80x110",
-      createdAt: "2025-12-05",
+      genre: "개발/프로그래밍",
+      ownerName: "홍길동",
+      createdAt: "2024-11-12",
+      thumbnail: "https://placehold.co/80x110?text=Clean+Code",
     },
     {
       id: 2,
       title: "리팩터링 2판",
       author: "마틴 파울러",
       description: "기존 코드를 개선하는 다양한 리팩터링 기법을 소개합니다.",
-      thumbnail: "https://placehold.co/80x110?text=Book",
-      createdAt: "2025-12-01",
+      genre: "개발/프로그래밍",
+      ownerName: "이몽룡",
+      createdAt: "2024-10-03",
+      thumbnail: "https://placehold.co/80x110?text=Refactoring",
     },
-    // TODO: 나중에 실제 데이터가 더 많아지면 이 배열이 길어질 것
+    {
+      id: 3,
+      title: "이펙티브 자바",
+      author: "조슈아 블로크",
+      description: "자바 개발에서 실천할 수 있는 90여 가지 베스트 프랙티스 모음.",
+      genre: "개발/프로그래밍",
+      ownerName: "성춘향",
+      createdAt: "2024-09-21",
+      thumbnail: "https://placehold.co/80x110?text=Effective+Java",
+    },
+    {
+      id: 4,
+      title: "소프트웨어 장인",
+      author: "산드로 만쿠소",
+      description: "장인 정신을 갖춘 개발자가 되기 위한 태도와 실천법을 다룹니다.",
+      genre: "개발/문화",
+      ownerName: "임꺽정",
+      createdAt: "2024-08-18",
+      thumbnail: "https://placehold.co/80x110?text=Craftsmanship",
+    },
   ];
 
   const [page, setPage] = useState(1);
