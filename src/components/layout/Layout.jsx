@@ -26,7 +26,7 @@ import BookmarksIcon from "@mui/icons-material/Bookmarks";
 import HttpIcon from "@mui/icons-material/Http";
 
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import AivleLogo from '../../assets/aivle_logo.png';
+import AivleLogo from "../../assets/aivle_logo.png";
 
 const drawerWidth = 240;
 
@@ -47,6 +47,17 @@ function Layout(props) {
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
+  };
+
+  // ✅ 매 렌더마다 토큰 확인해서 로그인 여부 판별
+  const token = localStorage.getItem("token");
+  const isLoggedIn = !!token;
+
+  const handleLogout = () => {
+    // 로그인 시 저장해둔 값들 정리
+    localStorage.removeItem("token");
+    localStorage.removeItem("user"); // 있으면 같이 삭제
+    navigate("/login");
   };
 
   /* ---------------- Drawer ---------------- */
@@ -95,7 +106,14 @@ function Layout(props) {
 
   /* ---------------- Layout 전체 ---------------- */
   return (
-    <Box sx={{ display: "flex", minHeight: "100vh", flexDirection: "column", width: "100%" }}>
+    <Box
+      sx={{
+        display: "flex",
+        minHeight: "100vh",
+        flexDirection: "column",
+        width: "100%",
+      }}
+    >
       <CssBaseline />
 
       {/* ---------------- AppBar ---------------- */}
@@ -119,8 +137,12 @@ function Layout(props) {
             <MenuIcon />
           </IconButton>
 
-          {/* 제목 */}
-          <img src={AivleLogo} alt="AIVLE Logo" style={{ width: 100, height: 'auto', marginRight: 16 }}/>
+          {/* 제목 + 로고 */}
+          <img
+            src={AivleLogo}
+            alt="AIVLE Logo"
+            style={{ width: 100, height: "auto", marginRight: 16 }}
+          />
           <Typography
             variant="h6"
             noWrap
@@ -132,31 +154,50 @@ function Layout(props) {
           {/* 오른쪽 여백 */}
           <Box sx={{ flexGrow: 1 }} />
 
-          {/* 로그인 / 회원가입 */}
+          {/* ✅ 로그인 상태에 따라 버튼 분기 */}
           <Box sx={{ display: "flex", gap: 1 }}>
-            <Button
-              color="inherit"
-              startIcon={<LoginIcon />}
-              onClick={() => navigate("/login")}
-              sx={{ textTransform: "none", fontWeight: 500 }}
-            >
-              로그인
-            </Button>
+            {isLoggedIn ? (
+              // ✅ 로그인 이후: 로그아웃 버튼만 표시
+              <Button
+                color="inherit"
+                onClick={handleLogout}
+                sx={{
+                    textTransform: "none",
+                    fontWeight: 600,
+                    boxShadow: "none",
+                    "&:hover": { boxShadow: "0 0 8px rgba(0,0,0,0.25)" },
+                  }}
+              >
+                로그아웃
+              </Button>
+            ) : (
+              // ✅ 비로그인 상태: 로그인 / 회원가입 버튼
+              <>
+                <Button
+                  color="inherit"
+                  startIcon={<LoginIcon />}
+                  onClick={() => navigate("/login")}
+                  sx={{ textTransform: "none", fontWeight: 500 }}
+                >
+                  로그인
+                </Button>
 
-            <Button
-              variant="contained"
-              color="secondary"
-              startIcon={<PersonAddIcon />}
-              onClick={() => navigate("/signup")}
-              sx={{
-                textTransform: "none",
-                fontWeight: 600,
-                boxShadow: "none",
-                "&:hover": { boxShadow: "0 0 8px rgba(0,0,0,0.25)" },
-              }}
-            >
-              회원가입
-            </Button>
+                <Button
+                  variant="contained"
+                  color="secondary"
+                  startIcon={<PersonAddIcon />}
+                  onClick={() => navigate("/signup")}
+                  sx={{
+                    textTransform: "none",
+                    fontWeight: 600,
+                    boxShadow: "none",
+                    "&:hover": { boxShadow: "0 0 8px rgba(0,0,0,0.25)" },
+                  }}
+                >
+                  회원가입
+                </Button>
+              </>
+            )}
           </Box>
         </Toolbar>
       </AppBar>
@@ -201,7 +242,7 @@ function Layout(props) {
           </Drawer>
         </Box>
 
-        {/* ---------------- 메인 컨텐츠 (가운데 정렬) ---------------- */}
+        {/* ---------------- 메인 컨텐츠 ---------------- */}
         <Box
           component="main"
           sx={{
@@ -215,7 +256,6 @@ function Layout(props) {
             width: "100%",
           }}
         >
-          {/* 중앙 고정 폭 컨테이너 */}
           <Box
             sx={{
               width: "100%",

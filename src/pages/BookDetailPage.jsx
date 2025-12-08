@@ -25,16 +25,26 @@ export default function BookDetailPage() {
   const [error, setError] = useState("");
   const [deleting, setDeleting] = useState(false);
 
-  const currentUser = JSON.parse(localStorage.getItem("user"));
+  // ✅ 로그인한 사용자 ID (localStorage에 "userId"가 "1" 이런 식으로 들어있다고 가정)
+  const rawUserId = localStorage.getItem("userId"); // 문자열 또는 null
+  const currentUserId = rawUserId != null ? Number(rawUserId) : null;
 
   useEffect(() => {
     const token = localStorage.getItem("token");
+
     const fetchBook = async () => {
       try {
         const res = await fetch(`${API_BASE_URL}/books/${id}`, {
           headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         });
 
+        console.log("BOOK DETAIL RES:", res);
+
+        if (res.status === 401) {
+          setError("도서 정보를 보려면 로그인이 필요합니다.");
+          setLoading(false);
+          return;
+        }
         if (res.status === 404) {
           setError("도서를 찾을 수 없습니다.");
           setLoading(false);
@@ -47,10 +57,18 @@ export default function BookDetailPage() {
         }
         if (!res.ok) throw new Error("도서 정보를 불러오지 못했습니다.");
 
-        const data = await res.json();
+        const raw = await res.json();
+        console.log("BOOK DETAIL RAW:", raw);
+
+        // { status, message, data: {...} } 구조 언패킹
+        const data = raw?.data ?? raw;
+
+        const thumbnail =
+          data.coverUrl || data.coverImageUrl || data.thumbnail || "";
+
         setBook({
           ...data,
-          thumbnail: data.thumbnail || data.thumbnailUrl || data.coverImageUrl,
+          thumbnail,
         });
         setLoading(false);
       } catch (err) {
@@ -63,15 +81,20 @@ export default function BookDetailPage() {
     fetchBook();
   }, [id]);
 
+  // ✅ 내가 작성한 책인지 여부 (숫자 vs 숫자 비교)
   const isOwner =
-    currentUser &&
-    book &&
-    (book.userId === currentUser.userId ||
-      book.userId === currentUser.id ||
-      book.ownerId === currentUser.userId);
+    book != null &&
+    currentUserId != null &&
+    Number(book.userId) === currentUserId;
 
+  console.log("IS OWNER:", isOwner);
+  console.log("CURRENT USER ID:", currentUserId);
+  console.log("BOOK OWNER ID:", book?.userId);
+
+  // ✅ 삭제 처리
   const handleDelete = async () => {
     if (!window.confirm("정말 삭제하시겠습니까?")) return;
+
     setDeleting(true);
     setError("");
 
@@ -82,6 +105,10 @@ export default function BookDetailPage() {
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       });
 
+      if (res.status === 401) {
+        setError("도서를 삭제하려면 로그인이 필요합니다.");
+        return;
+      }
       if (res.status === 404) {
         setError("도서를 찾을 수 없습니다.");
         return;
@@ -123,8 +150,24 @@ export default function BookDetailPage() {
   }
 
   return (
-    <Box sx={{ width: "100%", maxWidth: 1200, mx: "auto", px: { xs: 2, md: 3 }, py: { xs: 2, md: 3 } }}>
-      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2, flexWrap: "wrap", rowGap: 1 }}>
+    <Box
+      sx={{
+        width: "100%",
+        maxWidth: 1200,
+        mx: "auto",
+        px: { xs: 2, md: 3 },
+        py: { xs: 2, md: 3 },
+      }}
+    >
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          mb: 2,
+          flexWrap: "wrap",
+          rowGap: 1,
+        }}
+      >
         <Box>
           <Typography variant="h4" fontWeight={700} gutterBottom>
             {book.title}
@@ -144,7 +187,11 @@ export default function BookDetailPage() {
             />
           )}
           {book.createdAt && (
-            <Typography variant="caption" color="text.secondary" display="block">
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              display="block"
+            >
               업로드: {book.createdAt}
             </Typography>
           )}
@@ -188,7 +235,11 @@ export default function BookDetailPage() {
           <Stack spacing={1.5}>
             {book.genre && (
               <Box>
-                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                <Typography
+                  variant="subtitle2"
+                  color="text.secondary"
+                  gutterBottom
+                >
                   장르
                 </Typography>
                 <Typography variant="body1">{book.genre}</Typography>
@@ -196,7 +247,11 @@ export default function BookDetailPage() {
             )}
 
             <Box>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+              <Typography
+                variant="subtitle2"
+                color="text.secondary"
+                gutterBottom
+              >
                 저자
               </Typography>
               <Typography variant="body1">{book.author}</Typography>
@@ -204,10 +259,17 @@ export default function BookDetailPage() {
 
             {book.description && (
               <Box>
-                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                <Typography
+                  variant="subtitle2"
+                  color="text.secondary"
+                  gutterBottom
+                >
                   책 소개
                 </Typography>
-                <Typography variant="body1" sx={{ whiteSpace: "pre-line", lineHeight: 1.6 }}>
+                <Typography
+                  variant="body1"
+                  sx={{ whiteSpace: "pre-line", lineHeight: 1.6 }}
+                >
                   {book.description}
                 </Typography>
               </Box>
@@ -218,49 +280,37 @@ export default function BookDetailPage() {
             sx={{
               mt: "auto",
               display: "flex",
-              justifyContent: "space-between",
+              justifyContent: "flex-end",
               alignItems: "center",
               flexWrap: "wrap",
               rowGap: 1,
+              gap: 1,
             }}
           >
-            <Box>
-              {book.ownerName && (
-                <Typography variant="caption" color="text.secondary" display="block">
-                  작성자: {book.ownerName}
-                </Typography>
-              )}
-              {book.createdAt && (
-                <Typography variant="caption" color="text.disabled" display="block">
-                  등록일: {book.createdAt}
-                </Typography>
-              )}
-            </Box>
+            {/* ✅ 내가 쓴 책일 때만 수정/삭제 버튼 노출 */}
+            {isOwner && (
+              <>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={() => navigate(`/books/${book.id}/edit`)}
+                >
+                  수정하기
+                </Button>
+                <Button
+                  variant="outlined"
+                  color="error"
+                  onClick={handleDelete}
+                  disabled={deleting}
+                >
+                  {deleting ? "삭제 중..." : "삭제하기"}
+                </Button>
+              </>
+            )}
 
-            <Box sx={{ display: "flex", gap: 1 }}>
-              {isOwner && (
-                <>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={() => navigate(`/books/${book.id}/edit`)}
-                  >
-                    수정하기
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    color="error"
-                    onClick={handleDelete}
-                    disabled={deleting}
-                  >
-                    {deleting ? "삭제 중..." : "삭제하기"}
-                  </Button>
-                </>
-              )}
-              <Button variant="outlined" size="small" onClick={() => navigate(-1)}>
-                목록으로
-              </Button>
-            </Box>
+            <Button variant="outlined" size="small" onClick={() => navigate(-1)}>
+              목록으로
+            </Button>
           </Box>
         </CardContent>
       </Card>

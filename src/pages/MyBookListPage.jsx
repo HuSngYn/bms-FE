@@ -1,103 +1,87 @@
 // src/pages/MyBookListPage.jsx
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Box, Typography, CircularProgress, Alert } from "@mui/material";
+import { useState, useEffect } from "react";
 import BookList from "../components/books/BookList";
+import { Box, Pagination, Typography, Stack, CircularProgress, Alert } from "@mui/material";
 
+// ✅ .env.local 에서 API 베이스 URL 사용 (예: http://localhost:8080)
 const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/api/v1`;
 
 export default function MyBookListPage() {
-  const navigate = useNavigate();
-  const [books, setBooks] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [books, setBooks] = useState([]);      // 실제 서버 데이터
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 10;
+
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    // 로그인 안 되어 있으면 로그인 페이지로 보내기
-    const token = localStorage.getItem("token");
-    if (!token) {
-      alert("로그인이 필요합니다.");
-      navigate("/login");
-      return;
-    }
+    const fetchBooks = async () => {
+      setLoading(true);
+      setError("");
 
-    const fetchMyBooks = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/books/me`, {
-          // 실제 엔드포인트에 맞게 수정
+        const token = localStorage.getItem("token");
+
+        const res = await fetch(`${API_BASE_URL}/books/user`, {
+          method: "GET",
           headers: {
-            Authorization: `Bearer ${token}`,
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
         });
 
-        if (!res.ok) {
-          if (res.status === 401) {
-            setError("로그인이 만료되었습니다. 다시 로그인해주세요.");
-            localStorage.removeItem("token");
-            localStorage.removeItem("user");
-          } else {
-            setError("내가 작성한 책 목록을 가져오는 중 오류가 발생했습니다.");
-          }
+        if (res.status === 401) {
+          setError("도서 목록을 조회하려면 로그인이 필요합니다.");
+          setBooks([]);
           setLoading(false);
           return;
         }
 
-        const data = await res.json();
+        if (!res.ok) {
+          setError("도서 목록 조회 중 오류가 발생했습니다.");
+          setBooks([]);
+          setLoading(false);
+          return;
+        }
 
-        // 백엔드에서 내려주는 필드에 맞게 매핑
-        // 예시: [{ id, title, authorName, description, thumbnailUrl, createdAt }, ...]
-        const mapped = data.map((book) => ({
-          id: book.id,
-          title: book.title,
-          author: book.authorName || book.author || "나", // 없으면 임시
-          description: book.description,
-          thumbnail: book.thumbnailUrl,
-          createdAt: book.createdAt,
+        const raw = await res.json();
+
+        // 🔁 API 정의서: [ { "id", "title", "author", "genre", "coverImageUrl" } ]
+        // 혹시 ApiResponse 래퍼로 감싸져 온 경우도 대비
+        const list = Array.isArray(raw) ? raw : Array.isArray(raw.data) ? raw.data : [];
+
+        // BookList 컴포넌트에 맞게 필드 매핑
+        const mapped = list.map((b) => ({
+          id: b.id,
+          title: b.title,
+          author: b.author,
+          description: b.description || "",      // 백엔드에 없으면 빈 문자열
+          genre: b.genre,
+          ownerName: b.ownerName || "",          // 없으면 비워둠
+          createdAt: b.createdAt || "",          // 없으면 비워둠
+          thumbnail: b.coverImageUrl || "",      // API 정의의 coverImageUrl → thumbnail
         }));
 
         setBooks(mapped);
-        setLoading(false);
       } catch (err) {
         console.error(err);
-        setError("서버와 통신 중 오류가 발생했습니다.");
+        setError("도서 목록 조회 중 오류가 발생했습니다.");
+        setBooks([]);
+      } finally {
         setLoading(false);
       }
     };
 
-    fetchMyBooks();
-  }, [navigate]);
+    fetchBooks();
+  }, []);
 
-  if (!localStorage.getItem("token")) {
-    // 위에서 navigate 한 직후 렌더 한 번 더 도는 것 방지용
-    return null;
-  }
+  const totalPages = Math.ceil(books.length / itemsPerPage) || 1;
+  const startIndex = (page - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentBooks = books.slice(startIndex, endIndex);
 
-  if (loading) {
-    return (
-      <Box
-        sx={{
-          width: "100%",
-          maxWidth: 1200,
-          mx: "auto",
-          px: { xs: 2, md: 3 },
-          py: { xs: 2, md: 3 },
-          display: "flex",
-          flexDirection: "column",
-          gap: 2,
-        }}
-      >
-        <Typography variant="h5" fontWeight={700}>
-          내가 작성한 책
-        </Typography>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <CircularProgress size={20} />
-          <Typography variant="body2" color="text.secondary">
-            불러오는 중...
-          </Typography>
-        </Box>
-      </Box>
-    );
-  }
+  const handleChangePage = (_event, value) => {
+    setPage(value);
+  };
 
   return (
     <Box
@@ -107,24 +91,49 @@ export default function MyBookListPage() {
         mx: "auto",
         px: { xs: 2, md: 3 },
         py: { xs: 2, md: 3 },
-        display: "flex",
-        flexDirection: "column",
-        gap: 2,
       }}
     >
-      <Box>
+      <Stack spacing={1} sx={{ mb: 3 }}>
         <Typography variant="h5" fontWeight={700}>
-          내가 작성한 책
+          책 목록
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          로그인한 사용자가 작성한 책 목록입니다.
+          사용자들이 업로드한 책 정보를 공유하는 페이지입니다.
         </Typography>
-      </Box>
+      </Stack>
 
-      {error ? (
-        <Alert severity="error">{error}</Alert>
-      ) : (
-        <BookList books={books} />
+      {loading && (
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+          <CircularProgress />
+        </Box>
+      )}
+
+      {!loading && error && (
+        <Box sx={{ mb: 3 }}>
+          <Alert severity="error">{error}</Alert>
+        </Box>
+      )}
+
+      {!loading && !error && (
+        <>
+          <BookList books={currentBooks} />
+
+          <Box
+            sx={{
+              mt: 4,
+              display: "flex",
+              justifyContent: "center",
+            }}
+          >
+            <Pagination
+              count={totalPages}
+              page={page}
+              onChange={handleChangePage}
+              color="primary"
+              shape="rounded"
+            />
+          </Box>
+        </>
       )}
     </Box>
   );

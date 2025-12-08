@@ -56,9 +56,11 @@ export default function LogInPage() {
 
             const data = await res.json();
             console.log("Login Success Data:", data);
-
+            console.log("Token:", data?.data?.token);
+            console.log("User:", data?.data?.userId);
             // JWT 저장
             localStorage.setItem("token", data?.data?.token);
+            localStorage.setItem("userId", JSON.stringify(data?.data?.userId));
 
             // 로그인 성공 → 홈으로 이동
             navigate("/");
