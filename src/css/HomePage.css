@@ -175,28 +175,35 @@
 
 .recommend-book-list {
     display: flex;
-    gap: 12px;
+    gap: 24px; /* 카드가 커졌으니 간격도 조금 넓힘 */
 }
 
 .recommend-book-card {
     flex: 1;
-    min-width: 120px;
+    min-width: 200px;       /* 기존 120px → 360px (3배) */
     background-color: #ffffff;
-    border-radius: 16px;
-    padding: 12px 10px 14px;
+    border-radius: 20px;    /* 크기에 맞게 조금 더 둥글게 */
+    padding: 28px 20px 32px; /* 전체 여백도 크게 */
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 16px;              /* 내부 요소 간격 증가 */
     align-items: center;
-    box-shadow: 0 2px 8px rgba(15, 86, 116, 0.06);
+    box-shadow: 0 4px 14px rgba(15, 86, 116, 0.08);
 }
 
 .recommend-book-cover {
     width: 100%;
-    height: 120px;
-    border-radius: 10px;
+    height: 200px;          /* 기존 120px → 360px (3배) */
+    border-radius: 16px;
     background-color: #e4f1f6;
 }
+
+.recommend-book-title {
+    font-size: 20px;        /* 제목도 더 크게 */
+    font-weight: 600;
+    text-align: center;
+}
+
 
 .recommend-book-body {
     width: 100%;

@@ -64,7 +64,7 @@ export default function BookDetailPage() {
         const data = raw?.data ?? raw;
 
         const thumbnail =
-          data.coverUrl || data.coverImageUrl || data.thumbnail || "";
+          data.coverUrl || data.coverImageUrl || data.thumbnail || data.bookCoverUrl || "";
 
         setBook({
           ...data,

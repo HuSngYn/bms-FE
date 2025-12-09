@@ -10,6 +10,7 @@ import BookDetailPage from "./pages/BookDetailPage.jsx";
 import BookEditPage from "./pages/BookEditPage.jsx";
 import ApiTestPage from "./pages/ApiTestPage.jsx";
 import MyBookListPage from "./pages/MyBookListPage.jsx";
+import ImageCreatePage from "./pages/ImageCreatePage.jsx";
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
         <Route path="books/:id/edit" element={<BookEditPage />} />
         <Route path="api_test" element={<ApiTestPage />} />
         <Route path="my/books" element={<MyBookListPage />} />
+        <Route path="images/:id" element={<ImageCreatePage />} />
 
         <Route path="*" element={<div>페이지를 찾을 수 없습니다.</div>} />
       </Route>

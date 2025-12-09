@@ -1,25 +1,19 @@
 // src/pages/BookCreatePage.jsx
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "../css/BookCreatePage.css";
 import AivleLogo2 from '../assets/aivle_logo2.png';
 
 const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/api/v1`;
 
-// React 컴포넌트 → UI를 화면에 그리는 함수.
 export default function BookCreatePage() {
-    const [coverUrl, setCoverUrl] = useState("");
-
-    const genre = [
-        "소설", "에세이", "추리", "판타지", "로맨스",
-        "인문", "자기계발", "경제/경영", "과학/기술", "역사/문화"
-    ];
+    const navigate = useNavigate();
 
     const initialForm = {
         title: "",
         author: "",
         description: "",
-        genre: "",
-        coverUrl: "", // ← 책 표지 URL도 저장 가능하도록 확장 (선택)
+        // genre 삭제됨
     };
 
     const [form, setForm] = useState(initialForm);
@@ -36,62 +30,68 @@ export default function BookCreatePage() {
         const next = {};
         if (!form.title.trim()) next.title = "제목은 필수입니다.";
         if (!form.description.trim()) next.description = "소개는 필수입니다.";
-        if (!form.genre) next.genre = "장르를 선택해 주세요.";
         return next;
     };
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
+    e.preventDefault();
 
-        const nextErrors = validate();
-        if (Object.keys(nextErrors).length > 0) {
-            setErrors(nextErrors);
+    const nextErrors = validate();
+    if (Object.keys(nextErrors).length > 0) {
+        setErrors(nextErrors);
+        return;
+    }
+
+    setErrors({});
+    setSubmitting(true);
+    setMessage("");
+
+    try {
+        const token = localStorage.getItem("token");
+
+        const res = await fetch(`${API_BASE_URL}/books`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+            body: JSON.stringify(form),
+        });
+
+        if (res.status === 401) {
+            setMessage("로그인이 필요합니다.");
+            setSubmitting(false);
             return;
         }
 
-        setErrors({});
-        setSubmitting(true);
-        setMessage("");
+        if (!res.ok) throw new Error("서버 오류");
 
-        try {
-            const payload = { ...form, coverUrl };
+        const json = await res.json();
+        console.log("API raw response:", json);
 
-            const token = localStorage.getItem("token");
-            const res = await fetch(`${API_BASE_URL}/books`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-                },
-                body: JSON.stringify(payload),
-            });
+        const createdId = json?.data?.id; // ✅ 여기!
 
-            if (res.status === 401) {
-                setMessage("로그인이 필요합니다.");
-                setSubmitting(false);
-                return;
-            }
-
-            if (!res.ok) throw new Error("서버 오류");
-
-            setMessage("도서 등록 요청이 완료되었습니다.");
-
-            setForm(initialForm);
-            setCoverUrl("");
-
-        } catch (err) {
-            console.error(err);
-            setMessage("등록 중 오류가 발생했습니다.");
-        } finally {
+        if (!createdId) {
+            setMessage("ID 응답이 없습니다. API 응답을 확인하십시오.");
             setSubmitting(false);
+            return;
         }
-    };
+
+        navigate(`/images/${createdId}`);
+
+    } catch (err) {
+        console.error(err);
+        setMessage("등록 중 오류가 발생했습니다.");
+    } finally {
+        setSubmitting(false);
+    }
+};
+
 
     return (
         <div className="book-create-card">
             <div className="book-form-wrapper">
 
-                {/* 로고 자리 */}
                 <div className="logo-container">
                     <img src={AivleLogo2} alt="에이블스쿨" className="logo_trip-image" />
                 </div>
@@ -140,49 +140,13 @@ export default function BookCreatePage() {
                         {errors.description && <p className="error-text">{errors.description}</p>}
                     </label>
 
-                    {/* 카테고리 */}
-                    <label className="book-form-label">
-                        책의 장르별 카테고리를 선택해주세요 *
-                        <select
-                            name="genre"
-                            value={form.genre}
-                            onChange={handleChange}
-                            className={`book-input select ${errors.genre ? "error" : ""}`}
-                        >
-                            <option value="">카테고리 선택</option>
-                            {genre.map((c) => (
-                                <option key={c} value={c}>{c}</option>
-                            ))}
-                        </select>
-                        {errors.genre && <p className="error-text">{errors.genre}</p>}
-                    </label>
-
-                    {/* 책 표지 URL 입력 */}
-                    <label className="book-form-label">
-                        책 표지의 url을 입력해주세요
-                        <input
-                            type="text"
-                            name="coverUrl"
-                            className="book-input"
-                            placeholder="책 표지의 url을 입력해주세요."
-                            value={coverUrl}
-                            onChange={(e) => setCoverUrl(e.target.value)}
-                        />
-                    </label>
-
-                    {/* 미리보기 영역 */}
-                    {coverUrl && (
-                        <div className="cover-preview">
-                            <img src={coverUrl} alt="book cover" />
-                        </div>
-                    )}
-
+                    {/* 버튼: 다음 */}
                     <button
                         type="submit"
                         className="book-form-button"
                         disabled={submitting}
                     >
-                        {submitting ? "등록 중..." : "등록하기"}
+                        {submitting ? "저장 중..." : "다음"}
                     </button>
 
                     {message && <p className="form-message">{message}</p>}

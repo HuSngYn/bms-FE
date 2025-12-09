@@ -10,28 +10,21 @@ export default function BookEditPage() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const genreList = [
-    "소설", "에세이", "추리", "판타지", "로맨스",
-    "인문", "자기계발", "경제/경영", "과학/기술", "역사/문화",
-  ];
-
+  // ✅ CreatePage와 동일하게: title, author, description만 사용
   const initialForm = {
     title: "",
     author: "",
     description: "",
-    genre: "",
-    coverUrl: "",
   };
 
   const [form, setForm] = useState(initialForm);
-  const [coverUrl, setCoverUrl] = useState("");
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const [globalError, setGlobalError] = useState("");
 
-  // 기존 도서 정보 불러오기
+  // ✅ 기존 도서 정보 불러오기
   useEffect(() => {
     const fetchBook = async () => {
       setLoading(true);
@@ -61,21 +54,15 @@ export default function BookEditPage() {
         if (!res.ok) throw new Error("도서 정보를 불러오지 못했습니다.");
 
         const raw = await res.json();
-        const data = raw?.data ?? raw; // ApiResponse<T> 또는 순수 객체 둘 다 대응
-
-        const initialCover =
-          data.coverUrl || data.coverImageUrl || data.thumbnail || "";
+        const data = raw?.data ?? raw; // ApiResponse<T> 또는 순수 객체 대응
 
         const nextForm = {
           title: data.title || "",
           author: data.author || "",
           description: data.description || "",
-          genre: data.genre || "",
-          coverUrl: initialCover || "",
         };
 
         setForm(nextForm);
-        setCoverUrl(initialCover || "");
       } catch (err) {
         console.error(err);
         setGlobalError("도서 정보를 불러오지 못했습니다.");
@@ -90,16 +77,17 @@ export default function BookEditPage() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+    // 입력 중 에러/메시지 초기화
     setErrors({});
     setMessage("");
     setGlobalError("");
   };
 
+  // ✅ CreatePage와 동일한 검증 로직
   const validate = () => {
     const next = {};
     if (!form.title.trim()) next.title = "제목은 필수입니다.";
     if (!form.description.trim()) next.description = "소개는 필수입니다.";
-    if (!form.genre) next.genre = "장르를 선택해 주세요.";
     return next;
   };
 
@@ -118,12 +106,11 @@ export default function BookEditPage() {
     setGlobalError("");
 
     try {
+      // ✅ CreatePage와 동일한 payload 구조 (title/author/description만)
       const payload = {
         title: form.title.trim(),
         author: form.author.trim(),
         description: form.description.trim(),
-        genre: form.genre,
-        coverUrl: coverUrl.trim(),
       };
 
       const token = localStorage.getItem("token");
@@ -151,16 +138,16 @@ export default function BookEditPage() {
       }
       if (!res.ok) throw new Error("서버 오류");
 
-      // 응답 바디 형식과 상관없이, 성공만 확인하고 메시지/이동 처리
+      // 응답 바디가 있으면 로그만 찍고, 없어도 무시
       try {
         const raw = await res.json();
         console.log("UPDATE RESPONSE:", raw);
       } catch (_) {
-        // 204 No Content 등은 그냥 무시
+        // 204 No Content 등은 무시
       }
 
       setMessage("도서 정보가 수정되었습니다.");
-      // 수정 완료 후 상세 페이지로 이동 (필요 없으면 이 부분 제거해도 됨)
+      // ✅ 수정 완료 후 상세 페이지로 이동 (원래 로직 유지)
       setTimeout(() => navigate(`/books/${id}`), 800);
     } catch (err) {
       console.error(err);
@@ -203,7 +190,7 @@ export default function BookEditPage() {
   return (
     <div className="book-create-card">
       <div className="book-form-wrapper">
-        {/* 로고 자리 */}
+        {/* 로고 */}
         <div className="logo-container">
           <img src={AivleLogo2} alt="에이블스쿨" className="logo_trip-image" />
         </div>
@@ -253,7 +240,9 @@ export default function BookEditPage() {
               value={form.description}
               onChange={handleChange}
               placeholder="책의 소개를 작성해주세요."
-              className={`book-input textarea ${errors.description ? "error" : ""}`}
+              className={`book-input textarea ${
+                errors.description ? "error" : ""
+              }`}
               rows={4}
             />
             {errors.description && (
@@ -261,45 +250,7 @@ export default function BookEditPage() {
             )}
           </label>
 
-          {/* 카테고리 */}
-          <label className="book-form-label">
-            책의 장르별 카테고리를 선택해주세요 *
-            <select
-              name="genre"
-              value={form.genre}
-              onChange={handleChange}
-              className={`book-input select ${errors.genre ? "error" : ""}`}
-            >
-              <option value="">카테고리 선택</option>
-              {genreList.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-            {errors.genre && <p className="error-text">{errors.genre}</p>}
-          </label>
-
-          {/* 책 표지 URL 입력 */}
-          <label className="book-form-label">
-            책 표지의 url을 입력해주세요
-            <input
-              type="text"
-              name="coverUrl"
-              className="book-input"
-              placeholder="책 표지의 url을 입력해주세요."
-              value={coverUrl}
-              onChange={(e) => setCoverUrl(e.target.value)}
-            />
-          </label>
-
-          {/* 미리보기 영역 */}
-          {coverUrl && (
-            <div className="cover-preview">
-              <img src={coverUrl} alt="book cover" />
-            </div>
-          )}
-
+          {/* 버튼 영역 */}
           <div
             style={{
               display: "flex",
@@ -311,7 +262,11 @@ export default function BookEditPage() {
             <button
               type="button"
               className="book-form-button"
-              style={{ backgroundColor: "#fff", color: "#1976d2", border: "1px solid #1976d2" }}
+              style={{
+                backgroundColor: "#fff",
+                color: "#1976d2",
+                border: "1px solid #1976d2",
+              }}
               onClick={() => navigate(-1)}
               disabled={submitting}
             >

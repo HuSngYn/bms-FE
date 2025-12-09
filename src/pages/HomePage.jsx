@@ -13,22 +13,6 @@ const bannerImages = [banner1, banner2, banner3];
 
 export default function HomePage() {
 
-    const [result, setResult] = useState(null);
-    const [error, setError] = useState(null);
-
-    const testApi = async () => {
-        try {
-            const res = await axios.get("http://localhost:8080/api/health");
-            // 실제 백엔드의 테스트용 API로 경로 수정해야 함
-
-            setResult(res.data);
-            setError(null);
-        } catch (err) {
-            setError(err.message);
-            setResult(null);
-        }
-    };
-
     // 현재 보여주는 인덱스
     const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -54,6 +38,8 @@ export default function HomePage() {
         { id: 2, title: "추천 도서 2" },
         { id: 3, title: "추천 도서 3" },
         { id: 4, title: "추천 도서 4" },
+        { id: 5, title: "추천 도서 5" },
+        { id: 6, title: "추천 도서 6" },
     ];
 
     // 클릭 시 동작 (지금은 콘솔만, 나중에 상세 페이지 이동으로 교체)
@@ -132,31 +118,11 @@ export default function HomePage() {
 
             {/* 하단 : 최근 본 책 / 추천 도서 */}
             <section className="home-bottom">
-                {/* 최근 본 책 */}
-                <div className="home-section home-section-recent">
-                    <h2 className="home-section-title">최근 본 책</h2>
 
-                    <div className="recent-book-list">
-                        {recentBooks.map((book) => (
-                            <article
-                                key={book.id}
-                                className="recent-book-card clickable"
-                                onClick={() => handleRecentClick(book)}
-                            >
-                                <div className="recent-book-cover-circle" />
-                                <div className="recent-book-info">
-                                    <h3 className="recent-book-title">{book.title}</h3>
-                                    <p className="recent-book-meta">{book.author}</p>
-                                    <p className="recent-book-meta">{book.genre}</p>
-                                </div>
-                            </article>
-                        ))}
-                    </div>
-                </div>
 
                 {/* 추천 도서 */}
                 <div className="home-section home-section-recommend">
-                    <h2 className="home-section-title">추천 도서</h2>
+                    <h2 className="home-section-title">최근 업데이트 된 도서</h2>
 
                     <div className="recommend-book-list">
                         {recommendedBooks.map((book) => (

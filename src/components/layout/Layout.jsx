@@ -35,7 +35,6 @@ const menuItems = [
   { text: "홈", icon: <HomeIcon />, path: "/" },
   { text: "책 목록", icon: <MenuBookIcon />, path: "/books" },
   { text: "책 등록", icon: <AddCircleOutlineIcon />, path: "/books/new" },
-  { text: "API_TEST", icon: <HttpIcon />, path: "/api_test" },
   { text: "내 책 목록", icon: <BookmarksIcon />, path: "/my/books" },
 ];
 
