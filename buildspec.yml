@@ -10,7 +10,8 @@ phases:
       - npm install
   build:
     commands:
-      - ng build -c production
+      - echo "VITE_API_URL=$VITE_API_URL"
+      - npm run build
 artifacts:
   base-directory: dist/my-angular-project
   files:
