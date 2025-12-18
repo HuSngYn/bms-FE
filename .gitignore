@@ -33,3 +33,5 @@ vite.config.*.timestamp*
 *.njsproj
 *.sln
 *.sw?
+
+*.zip
