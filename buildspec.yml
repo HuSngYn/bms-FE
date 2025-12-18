@@ -13,7 +13,7 @@ phases:
       - echo "VITE_API_URL=$VITE_API_URL"
       - npm run build
 artifacts:
-  base-directory: dist/my-angular-project
+  base-directory: dist
   files:
     - '**/*'
 cache:
