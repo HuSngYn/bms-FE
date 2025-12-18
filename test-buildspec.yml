@@ -1,0 +1,14 @@
+version: 0.2
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+    commands:
+      - npm install -g @angular/cli@17
+  pre_build:
+    commands:
+      - npm install
+  build:
+    commands:
+      - echo "VITE_API_URL=$VITE_API_URL"
+      - ng test --no-watch --no-progress --browsers=ChromeHeadlessCI
